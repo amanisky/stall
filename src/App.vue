@@ -1,28 +1,109 @@
 <template>
-  <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld/>
-  </div>
+<div id="app">
+  <el-container>
+    <el-header>装修展位</el-header>
+    <el-container>
+      <el-aside width="300px">
+        <el-collapse v-model="activeNames">
+          <el-collapse-item title="通用" name="1">
+            <div class="myicon">
+              <img src="@/images/deng.svg" alt="灯">
+              <img src="@/images/guizi.svg" alt="柜子">
+            </div>
+          </el-collapse-item>
+          <el-collapse-item title="图标" name="2">
+            <div class="myicon">
+              <img src="@/images/deng.svg" alt="灯">
+              <img src="@/images/guizi.svg" alt="柜子">
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+      </el-aside>
+      <el-main>
+        <div id="canvas-box">
+          <canvas ref="c"></canvas>
+        </div>
+      </el-main>
+      <el-aside width="300px">
+        111222
+      </el-aside>
+    </el-container>
+  </el-container>
+</div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld'
-
+import { fabric } from 'fabric'
+import stall from '@/images/stall.svg'
 export default {
   name: 'App',
-  components: {
-    HelloWorld
+  data () {
+    return {
+      canvas: null,
+      activeNames: [1]
+    }
+  },
+  mounted () {
+    fabric.Group.prototype.hasControls = false
+    fabric.Group.prototype.lockMovementX = true
+    fabric.Group.prototype.lockMovementY = true
+    var canvasBox = document.getElementById('canvas-box')
+    this.canvas = new fabric.Canvas(this.$refs.c, {
+      width: canvasBox.clientWidth,
+      height: canvasBox.clientHeight,
+      backgroundColor: '#ccc'
+    })
+    fabric.loadSVGFromURL(stall, (objs, opts) => {
+      var obj = fabric.util.groupSVGElements(objs, opts)
+      for (var i = 0; i < 4; i++) {
+        obj.clone((clone) => {
+          clone.scale(1.5).set({
+            left: i * clone.get('width') * 1.5,
+            hasControls: false,
+            lockMovementX: true,
+            lockMovementY: true
+          })
+          this.canvas.add(clone)
+        })
+      }
+    })
   }
 }
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.el-header, .el-footer {
+  background-color: #B3C0D1;
+  color: #333;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  line-height: 60px;
+}
+
+.el-aside {
+  height: calc(100vh - 60px);
+  color: #333;
+  text-align: center;
+  background-color: #D3DCE6;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.el-main {
+  height: calc(100vh - 60px);
+  color: #333;
+  background-color: #E9EEF3;
+}
+
+#canvas-box {
+  height: 100%;
+}
+
+.myicon {
+  display: flex;
+}
+
+.myicon img {
+  width: 30px;
+  height: 30px;
 }
 </style>
