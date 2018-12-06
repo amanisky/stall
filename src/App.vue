@@ -60,7 +60,7 @@ export default {
           clone.scale(2)
           var text = new fabric.Text(`B${40 + i}`, { top: clone.get('height') * 2 })
           text.set('left', (clone.get('width') * 2 - text.get('width')) / 2)
-          var group = new fabric.Group([clone, text], { left: clone.get('width') * 2 * i })
+          var group = new fabric.Group([clone, text], { left: clone.get('width') * 2 * i + 2, borderColor: 'red' })
           this.canvas.add(group)
         })
       }
