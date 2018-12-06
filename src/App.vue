@@ -24,7 +24,7 @@
           <canvas ref="c"></canvas>
         </div>
       </el-main>
-      <el-aside width="300px">
+      <el-aside width="200px">
         111222
       </el-aside>
     </el-container>
@@ -57,13 +57,11 @@ export default {
       var obj = fabric.util.groupSVGElements(objs, opts)
       for (var i = 0; i < 4; i++) {
         obj.clone((clone) => {
-          clone.scale(1.5).set({
-            left: i * clone.get('width') * 1.5,
-            hasControls: false,
-            lockMovementX: true,
-            lockMovementY: true
-          })
-          this.canvas.add(clone)
+          clone.scale(2)
+          var text = new fabric.Text(`B${40 + i}`, { top: clone.get('height') * 2 })
+          text.set('left', (clone.get('width') * 2 - text.get('width')) / 2)
+          var group = new fabric.Group([clone, text], { left: clone.get('width') * 2 * i })
+          this.canvas.add(group)
         })
       }
     })
