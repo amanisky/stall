@@ -60,8 +60,6 @@ export default {
   },
   mounted () {
     fabric.Object.prototype.hasControls = false
-    fabric.Group.prototype.lockMovementX = true
-    fabric.Group.prototype.lockMovementY = true
     fabric.Group.prototype.hoverCursor = 'default'
     fabric.Group.prototype.selectable = false
     var canvasBox = document.getElementById('canvas-box')
@@ -74,11 +72,11 @@ export default {
       img.scale(2)
       var width = img.getScaledWidth()
       var height = img.getScaledHeight()
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         img.clone(obj => {
           var text = new fabric.Text(`B${40 + i}`, { top: height })
           text.set('left', (width - text.width) / 2)
-          var group = new fabric.Group([obj, text], { left: width * i + 2 })
+          var group = new fabric.Group([obj, text], { left: width * i + 2, lockMovementX: true, lockMovementY: true })
           this.canvas.add(group)
           this.canvasInitState = this.canvas.toJSON()
         })
