@@ -26,7 +26,7 @@
         </el-button-group>
         <el-button-group>
           <el-button size="small" type="primary" @click="leftRotate">左旋转</el-button>
-          <el-button size="small" type="primary">右旋转</el-button>
+          <el-button size="small" type="primary" @click="rightRotate">右旋转</el-button>
           <el-button size="small" type="primary">调层距</el-button>
         </el-button-group>
         <el-button-group>
@@ -90,7 +90,7 @@ export default {
     addShape (url) {
       fabric.Image.fromURL(this.requireSVG(url), (img) => {
         img.scale(0.3)
-        this.canvas.add(img).bringToFront(img)
+        this.canvas.add(img).bringToFront(img).setActiveObject(img)
       })
     },
     // 获取SVG
@@ -117,13 +117,16 @@ export default {
     // 左旋转
     leftRotate () {
       var activeObject = this.canvas.getActiveObject()
-      console.log(activeObject.rotate)
-      // activeObject.set('rotate', activeObject.get('rotate') - 90).setCoords()
-      // this.canvas.requestRenderAll()
+      var angle = activeObject.angle
+      activeObject.rotate(angle - 90).setCoords()
+      this.canvas.requestRenderAll()
     },
     // 右旋转
     rightRotate () {
-
+      var activeObject = this.canvas.getActiveObject()
+      var angle = activeObject.angle
+      activeObject.rotate(angle + 90).setCoords()
+      this.canvas.requestRenderAll()
     }
   }
 }
