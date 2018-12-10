@@ -91,24 +91,24 @@ export default {
     fabric.Object.prototype.hasControls = false
     fabric.Group.prototype.hoverCursor = 'default'
     fabric.Group.prototype.selectable = false
-    var canvasBox = document.getElementById('canvas-box')
-    this.canvas = new fabric.Canvas(this.$refs.c, {
-      width: canvasBox.clientWidth,
-      height: canvasBox.clientHeight,
-      backgroundColor: '#fff'
-    })
-    this.canvas
-      .on('object:modified', () => {
-        this.updateCanvasState()
-      })
-      .on('object:added', () => {
-        this.updateCanvasState()
-      })
     this.initCanvas()
   },
   methods: {
     // 初始化画布
     initCanvas () {
+      var canvasBox = document.getElementById('canvas-box')
+      this.canvas = new fabric.Canvas(this.$refs.c, {
+        width: canvasBox.clientWidth,
+        height: canvasBox.clientHeight,
+        backgroundColor: '#fff'
+      })
+      this.canvas
+        .on('object:modified', () => {
+          this.updateCanvasState()
+        })
+        .on('object:added', () => {
+          this.updateCanvasState()
+        })
       fabric.Image.fromURL(this.requireSVG('stall'), (img) => {
         img.scale(2)
         var width = img.getScaledWidth()
