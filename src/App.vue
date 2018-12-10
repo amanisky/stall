@@ -3,13 +3,28 @@
   <el-container class="draw">
     <el-aside width="200px">
       <el-collapse v-model="activeNames">
-        <el-collapse-item title="通用" name="1">
+        <el-collapse-item title="用电类展具" name="1">
+          <div>
+            长臂射灯、金卤灯、日光灯、电箱、插座
+          </div>
           <div class="myicon">
             <img @click="addShape('deng')" src="@/images/deng.svg" alt="灯">
             <img @click="addShape('guizi')" src="@/images/guizi.svg" alt="柜子">
           </div>
         </el-collapse-item>
-        <el-collapse-item title="图标" name="2">
+        <el-collapse-item title="装搭类展具" name="2">
+          <div>
+            网片、地毯、围板、立柱、楣板、搁板、冲孔板、槽板、展柜、展架、地柜、饰柜、高低柜、报到台
+          </div>
+          <div class="myicon">
+            <img @click="addShape('deng')" src="@/images/deng.svg" alt="灯">
+            <img @click="addShape('guizi')" src="@/images/guizi.svg" alt="柜子">
+          </div>
+        </el-collapse-item>
+        <el-collapse-item title="洽谈类展具" name="3">
+          <div>
+            洽谈桌、洽谈椅
+          </div>
           <div class="myicon">
             <img @click="addShape('deng')" src="@/images/deng.svg" alt="灯">
             <img @click="addShape('guizi')" src="@/images/guizi.svg" alt="柜子">
@@ -30,10 +45,10 @@
           <el-button size="small" type="primary">调层距</el-button>
         </el-button-group>
         <el-button-group>
-          <el-button size="small" type="info">撤销</el-button>
-          <el-button size="small" type="info">重做</el-button>
+          <el-button size="small" type="info" :disabled="undoDisabled" @click="undo">撤销</el-button>
+          <el-button size="small" type="info" :disabled="redoDisabled" @click="redo">重做</el-button>
         </el-button-group>
-        <el-button size="small" type="success">保存</el-button>
+        <el-button size="small" type="success" @click="save">保存</el-button>
         <el-button size="small">返回</el-button>
       </el-header>
       <el-main>
@@ -54,8 +69,22 @@ export default {
     return {
       canvas: null,
       activeNames: [1],
+      // 当前画布状态
       canvasState: [],
-      canvasInitState: null
+      // 当前状态索引
+      currentStateIndex: -1,
+      // undo 按钮状态
+      undoStatus: false,
+      // undo 是否禁用
+      undoDisabled: true,
+      // undo 按钮完成状态
+      undoFinishedStatus: true,
+      // redo 按钮状态
+      redoStatus: false,
+      // redo 按钮状态
+      redoDisabled: false,
+      // redo 按钮完成状态
+      redoFinishedStatus: true
     }
   },
   mounted () {
@@ -68,22 +97,32 @@ export default {
       height: canvasBox.clientHeight,
       backgroundColor: '#fff'
     })
-    fabric.Image.fromURL(this.requireSVG('stall'), (img) => {
-      img.scale(2)
-      var width = img.getScaledWidth()
-      var height = img.getScaledHeight()
-      for (let i = 0; i < 4; i++) {
-        img.clone(obj => {
-          var text = new fabric.Text(`B${40 + i}`, { top: height })
-          text.set('left', (width - text.width) / 2)
-          var group = new fabric.Group([obj, text], { left: width * i + 2, lockMovementX: true, lockMovementY: true })
-          this.canvas.add(group)
-          this.canvasInitState = this.canvas.toJSON()
-        })
-      }
-    })
+    this.canvas
+      .on('object:modified', () => {
+        this.updateCanvasState()
+      })
+      .on('object:added', () => {
+        this.updateCanvasState()
+      })
+    this.initCanvas()
   },
   methods: {
+    // 初始化画布
+    initCanvas () {
+      fabric.Image.fromURL(this.requireSVG('stall'), (img) => {
+        img.scale(2)
+        var width = img.getScaledWidth()
+        var height = img.getScaledHeight()
+        for (let i = 0; i < 4; i++) {
+          img.clone(obj => {
+            var text = new fabric.Text(`B${40 + i}`, { top: height })
+            text.set('left', (width - text.width) / 2)
+            var group = new fabric.Group([obj, text], { left: width * i + 2, lockMovementX: true, lockMovementY: true })
+            this.canvas.add(group)
+          })
+        }
+      })
+    },
     // 添加形状
     addShape (url) {
       fabric.Image.fromURL(this.requireSVG(url), (img) => {
@@ -110,7 +149,9 @@ export default {
     },
     // 恢复默认
     reset () {
-      this.canvas.loadFromJSON(this.canvasInitState, this.canvas.renderAll.bind(this.canvas))
+      this.canvasState = []
+      this.currentStateIndex = -1
+      this.initCanvas()
     },
     // 左旋转
     leftRotate () {
@@ -125,6 +166,89 @@ export default {
       var angle = activeObject.angle
       activeObject.rotate(angle + 90).setCoords()
       this.canvas.requestRenderAll()
+    },
+    // 更新画布状态
+    updateCanvasState () {
+      if ((this.undoStatus === false && this.redoStatus === false)) {
+        var jsonData = this.canvas.toJSON()
+        var canvasAsJson = JSON.stringify(jsonData)
+        if (this.currentStateIndex < this.canvasState.length - 1) {
+          // 插入状态的索引值
+          var indexToBeInserted = this.currentStateIndex + 1
+          this.canvasState[indexToBeInserted] = canvasAsJson
+          // 保留的元素数量
+          var numberOfElementsToRetain = indexToBeInserted + 1
+          this.canvasState = this.canvasState.splice(0, numberOfElementsToRetain)
+        } else {
+          this.canvasState.push(canvasAsJson)
+          this.undoDisabled = false
+        }
+        this.currentStateIndex = this.canvasState.length - 1
+        if ((this.currentStateIndex === this.canvasState.length - 1) && this.currentStateIndex !== -1) {
+          this.redoDisabled = true
+        }
+      }
+    },
+    // 撤销
+    undo () {
+      if (this.undoFinishedStatus) {
+        if (this.currentStateIndex === -1) {
+          this.undoStatus = false
+        } else {
+          if (this.canvasState.length >= 1) {
+            this.undoFinishedStatus = false
+            if (this.currentStateIndex !== 0) {
+              this.undoStatus = true
+              this.canvas.loadFromJSON(this.canvasState[this.currentStateIndex - 1], () => {
+                this.canvas.renderAll()
+                this.undoStatus = false
+                this.currentStateIndex -= 1
+                this.undoDisabled = false
+                if (this.currentStateIndex !== this.canvasState.length - 1) {
+                  this.redoDisabled = false
+                }
+                this.undoFinishedStatus = true
+              })
+            } else if (this.currentStateIndex === 0) {
+              this.canvas.clear()
+              this.undoFinishedStatus = true
+              this.undoDisabled = true
+              this.redoDisabled = false
+              this.currentStateIndex -= 1
+            }
+          }
+        }
+      }
+    },
+    // 重做
+    redo () {
+      if (this.redoFinishedStatus) {
+        if ((this.currentStateIndex === this.canvasState.length - 1) && this.currentStateIndex !== -1) {
+          this.redoDisabled = true
+        } else {
+          if (this.canvasState.length > this.currentStateIndex && this.canvasState.length !== 0) {
+            this.redoFinishedStatus = false
+            this.redoStatus = true
+            this.canvas.loadFromJSON(this.canvasState[this.currentStateIndex + 1], () => {
+              this.canvas.renderAll()
+              this.redoStatus = false
+              this.currentStateIndex += 1
+              if (this.currentStateIndex !== -1) {
+                this.undoDisabled = false
+              }
+              this.redoFinishedStatus = true
+              if ((this.currentStateIndex === this.canvasState.length - 1) && this.currentStateIndex !== -1) {
+                this.redoDisabled = true
+              }
+            })
+          }
+        }
+      }
+    },
+    // 保存
+    save () {
+      // console.log(this.canvas.toJSON())
+      console.log(this.canvasState.length)
     }
   }
 }
