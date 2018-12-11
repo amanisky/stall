@@ -37,7 +37,7 @@
         <el-button-group>
           <el-button size="small" type="danger" @click="removeSelected">删除选中</el-button>
           <el-button size="small" type="danger" @click="through">打通展位</el-button>
-          <!-- <el-button size="small" type="danger" @click="reset">恢复默认</el-button> -->
+          <el-button size="small" type="danger" @click="reset">恢复默认</el-button>
         </el-button-group>
         <el-button-group>
           <el-button size="small" type="primary" @click="leftRotate">左旋转</el-button>
@@ -123,6 +123,15 @@ export default {
         }
       })
     },
+    // 恢复默认
+    reset () {
+      this.canvas.loadFromJSON(this.canvasInitState, this.canvas.renderAll.bind(this.canvas))
+      this.canvasState = []
+      this.undoFinishedStatus = true
+      this.undoDisabled = true
+      this.redoDisabled = true
+      this.currentStateIndex = -1
+    },
     // 添加形状
     addShape (url) {
       fabric.Image.fromURL(this.requireSVG(url), (img) => {
@@ -153,6 +162,7 @@ export default {
     // 左旋转
     leftRotate () {
       var activeObject = this.canvas.getActiveObject()
+      if (!activeObject) { return }
       var angle = activeObject.angle
       activeObject.rotate(angle - 90).setCoords()
       this.canvas.requestRenderAll()
@@ -160,6 +170,7 @@ export default {
     // 右旋转
     rightRotate () {
       var activeObject = this.canvas.getActiveObject()
+      if (!activeObject) { return }
       var angle = activeObject.angle
       activeObject.rotate(angle + 90).setCoords()
       this.canvas.requestRenderAll()
@@ -207,7 +218,6 @@ export default {
                 this.undoFinishedStatus = true
               })
             } else if (this.currentStateIndex === 0) {
-              // this.canvas.clear()
               this.canvas.loadFromJSON(this.canvasInitState, this.canvas.renderAll.bind(this.canvas))
               this.undoFinishedStatus = true
               this.undoDisabled = true
@@ -245,8 +255,7 @@ export default {
     },
     // 保存
     save () {
-      // console.log(this.canvas.toJSON())
-      console.log(this.canvasState.length)
+      console.log(this.canvas.toJSON())
     }
   }
 }
