@@ -37,7 +37,7 @@
         <el-button-group>
           <el-button size="small" type="danger" @click="removeSelected">删除选中</el-button>
           <el-button size="small" type="danger" @click="through">打通展位</el-button>
-          <el-button size="small" type="danger" @click="reset">恢复默认</el-button>
+          <!-- <el-button size="small" type="danger" @click="reset">恢复默认</el-button> -->
         </el-button-group>
         <el-button-group>
           <el-button size="small" type="primary" @click="leftRotate">左旋转</el-button>
@@ -69,6 +69,8 @@ export default {
     return {
       canvas: null,
       activeNames: [1],
+      // 画布初始状态
+      canvasInitState: null,
       // 当前画布状态
       canvasState: [],
       // 当前状态索引
@@ -82,7 +84,7 @@ export default {
       // redo 按钮状态
       redoStatus: false,
       // redo 按钮状态
-      redoDisabled: false,
+      redoDisabled: true,
       // redo 按钮完成状态
       redoFinishedStatus: true
     }
@@ -106,9 +108,6 @@ export default {
         .on('object:modified', () => {
           this.updateCanvasState()
         })
-        .on('object:added', () => {
-          this.updateCanvasState()
-        })
       fabric.Image.fromURL(this.requireSVG('stall'), (img) => {
         img.scale(2)
         var width = img.getScaledWidth()
@@ -119,6 +118,7 @@ export default {
             text.set('left', (width - text.width) / 2)
             var group = new fabric.Group([obj, text], { left: width * i + 2, lockMovementX: true, lockMovementY: true })
             this.canvas.add(group)
+            this.canvasInitState = this.canvas.toJSON()
           })
         }
       })
@@ -128,6 +128,7 @@ export default {
       fabric.Image.fromURL(this.requireSVG(url), (img) => {
         img.scale(0.3)
         this.canvas.add(img).bringToFront(img).setActiveObject(img)
+        this.updateCanvasState()
       })
     },
     // 获取SVG
@@ -140,18 +141,14 @@ export default {
       this.canvas.discardActiveObject()
       if (activeObjects.length) {
         this.canvas.remove.apply(this.canvas, activeObjects)
+        this.updateCanvasState()
       }
     },
     // 打通展位
     through () {
       var rect = new fabric.Rect({ top: 1.5, left: this.canvas.item(0).item(0).getScaledWidth() - 15, width: 30, height: this.canvas.item(0).item(0).getScaledHeight() - 4, fill: '#fff', lockMovementY: true })
       this.canvas.add(rect).setActiveObject(rect)
-    },
-    // 恢复默认
-    reset () {
-      this.canvasState = []
-      this.currentStateIndex = -1
-      this.initCanvas()
+      this.updateCanvasState()
     },
     // 左旋转
     leftRotate () {
@@ -210,7 +207,8 @@ export default {
                 this.undoFinishedStatus = true
               })
             } else if (this.currentStateIndex === 0) {
-              this.canvas.clear()
+              // this.canvas.clear()
+              this.canvas.loadFromJSON(this.canvasInitState, this.canvas.renderAll.bind(this.canvas))
               this.undoFinishedStatus = true
               this.undoDisabled = true
               this.redoDisabled = false
