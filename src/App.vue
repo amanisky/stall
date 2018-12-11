@@ -83,7 +83,7 @@ export default {
       undoFinishedStatus: true,
       // redo 按钮状态
       redoStatus: false,
-      // redo 按钮状态
+      // redo 是否禁用
       redoDisabled: true,
       // redo 按钮完成状态
       redoFinishedStatus: true
